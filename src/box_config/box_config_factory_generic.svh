@@ -1,3 +1,4 @@
+/*
 MIT License
 
 Copyright (c) 2024 William L. Moore
@@ -19,3 +20,22 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+*/
+
+(* factory *)
+class box_config_factory_generic#(type PT=box_config) extends box_config_factory;
+    `uvm_object_param_utils(box_config_factory_generic#(PT))
+    function new (string name="box_config_factory_generic");
+        super.new(name);
+    endfunction : new
+
+    virtual function box_config_abstract create_new (string name="", int length=0, int width=0, int height=0);
+        PT object = PT::create_new(name, length, width, height);
+        return object;
+    endfunction : create_new
+
+    virtual function box_config_abstract create_copy (string name="", uvm_object rhs);
+        PT object = box_config_copier#(PT)::create_copy(name, rhs);
+        return object;
+    endfunction : create_copy
+endclass : box_config_factory_generic

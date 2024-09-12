@@ -1,3 +1,4 @@
+/*
 MIT License
 
 Copyright (c) 2024 William L. Moore
@@ -19,3 +20,24 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+*/
+
+virtual class box_config_abstract extends immutable_object implements box_config_interface;
+    typedef box_config_factory_generic#(box_config_abstract) factory_type; // Sub-classes must override factory_type
+
+    function new (string name="");
+        super.new(name);
+    endfunction : new
+
+    static function box_config_abstract create_new (string name="", int length=0, int width=0, int height=0);
+        `uvm_fatal("OVERRIDE", "Sub-class must override static method box_config_abstract::create_new() with custom implementation")
+    endfunction : create_new
+
+    static function box_config_abstract create_copy (string name="", uvm_object rhs);
+        return box_config_copier#()::create_copy(name, rhs);
+    endfunction : create_copy
+
+    pure virtual function int get_length();
+    pure virtual function int get_width();
+    pure virtual function int get_height();
+endclass : box_config_abstract

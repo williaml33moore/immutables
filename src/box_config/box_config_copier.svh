@@ -1,3 +1,4 @@
+/*
 MIT License
 
 Copyright (c) 2024 William L. Moore
@@ -19,3 +20,22 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+*/
+
+
+class box_config_copier#(type T=box_config);
+    static function T create_copy (string name="", uvm_object rhs);
+        T new_copy;
+        box_config_interface rhs_;
+        int success;
+        success = $cast(rhs_, rhs);
+        assert (success);
+        new_copy = T::create_new(
+            name,
+            rhs_.get_length(),
+            rhs_.get_width(),
+            rhs_.get_height()
+        );
+        return new_copy;
+    endfunction : create_copy
+endclass : box_config_copier

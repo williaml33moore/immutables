@@ -1,3 +1,4 @@
+/*
 MIT License
 
 Copyright (c) 2024 William L. Moore
@@ -19,3 +20,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+*/
+
+interface class box_config_interface;
+    pure virtual function int get_length();
+    pure virtual function int get_width();
+    pure virtual function int get_height();
+endclass : box_config_interface
