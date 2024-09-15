@@ -48,19 +48,8 @@ class ubus_slave_driver extends uvm_driver #(ubus_transfer);
     fork
       get_and_drive();
       reset_signals();
-      debug();
     join
   endtask : run_phase
-
-  task debug();
-    struct {logic[15:0] sig_addr; logic[7:0] sig_data; logic rw; logic sig_bip;} sigs;
-
-    forever begin
-      @(posedge vif.sig_clock);
-      sigs = '{sig_addr: vif.sig_addr, sig_data: vif.sig_data, rw: vif.rw, sig_bip: vif.sig_bip};
-      $display($sformatf("%p", sigs));
-    end
-  endtask : debug
 
   // get_and_drive
   virtual protected task get_and_drive();
