@@ -57,15 +57,15 @@ class read_byte_seq extends ubus_base_sequence;
 
   virtual task body();
     `uvm_do_with(req, 
-      { req.addr == start_addr;
-        req.read_write == READ;
-        req.size == 1;
-        req.error_pos == 1000;
-        req.transmit_delay == transmit_del; } )
+      { req.request_constraints.addr == start_addr;
+        req.request_constraints.read_write == READ;
+        req.request_constraints.size == 1;
+        req.request_constraints.error_pos == 1000;
+        req.request_constraints.transmit_delay == transmit_del; } )
     get_response(rsp);
     `uvm_info(get_type_name(),
       $sformatf("%s read : addr = `x%0h, data[0] = `x%0h",
-      get_sequence_path(), rsp.addr, rsp.data[0]), 
+      get_sequence_path(), rsp.get_request().get_addr(), rsp.get_response().get_data().get(0)), 
       UVM_HIGH);
   endtask
   
@@ -92,15 +92,15 @@ class read_half_word_seq extends ubus_base_sequence;
 
   virtual task body();
     `uvm_do_with(req, 
-      { req.addr == start_addr;
-        req.read_write == READ;
-        req.size == 2;
-        req.error_pos == 1000;
-        req.transmit_delay == transmit_del; } )
+      { req.request_constraints.addr == start_addr;
+        req.request_constraints.read_write == READ;
+        req.request_constraints.size == 2;
+        req.request_constraints.error_pos == 1000;
+        req.request_constraints.transmit_delay == transmit_del; } )
     get_response(rsp);
     `uvm_info(get_type_name(),
       $sformatf("%s read : addr = `x%0h, data[0] = `x%0h, data[1] = `x%0h", 
-      get_sequence_path(), rsp.addr, rsp.data[0], rsp.data[1]), UVM_HIGH);
+      get_sequence_path(), rsp.get_request().get_addr(), rsp.get_response().get_data().get(0), rsp.get_response().get_data().get(1)), UVM_HIGH);
   endtask
 
 endclass : read_half_word_seq
@@ -126,17 +126,17 @@ class read_word_seq extends ubus_base_sequence;
 
   virtual task body();
     `uvm_do_with(req, 
-      { req.addr == start_addr;
-        req.read_write == READ;
-        req.size == 4;
-        req.error_pos == 1000;
-        req.transmit_delay == transmit_del; } )
+      { req.request_constraints.addr == start_addr;
+        req.request_constraints.read_write == READ;
+        req.request_constraints.size == 4;
+        req.request_constraints.error_pos == 1000;
+        req.request_constraints.transmit_delay == transmit_del; } )
     get_response(rsp);
     `uvm_info(get_type_name(),
       $sformatf("%s read : addr = `x%0h, data[0] = `x%0h, \
       data[1] = `x%0h, data[2] = `x%0h, data[3] = `x%0h",
-      get_sequence_path(), rsp.addr, rsp.data[0], rsp.data[1], 
-      rsp.data[2], rsp.data[3]), UVM_HIGH);
+      get_sequence_path(), rsp.get_request().get_addr(), rsp.get_response().get_data().get(0), rsp.get_response().get_data().get(1), 
+      rsp.get_response().get_data().get(2), rsp.get_response().get_data().get(3)), UVM_HIGH);
   endtask
   
 endclass : read_word_seq
@@ -162,18 +162,18 @@ class read_double_word_seq extends ubus_base_sequence;
 
   virtual task body();
     `uvm_do_with(req, 
-      { req.addr == start_addr;
-        req.read_write == READ;
-        req.size == 8;
-        req.error_pos == 1000;
-        req.transmit_delay == transmit_del; } )
+      { req.request_constraints.addr == start_addr;
+        req.request_constraints.read_write == READ;
+        req.request_constraints.size == 8;
+        req.request_constraints.error_pos == 1000;
+        req.request_constraints.transmit_delay == transmit_del; } )
     get_response(rsp);
     `uvm_info(get_type_name(),
       $sformatf("%s read : addr = `x%0h, data[0] = `x%0h, \
       data[1] = `x%0h, data[2] = `x%0h, data[3] = `x%0h, data[4] = `x%0h, \
       data[5] = `x%0h, data[6] = `x%0h, data[7] = `x%0h",
-      get_sequence_path(), rsp.addr, rsp.data[0], rsp.data[1], rsp.data[2],
-      rsp.data[3], rsp.data[4], rsp.data[5], rsp.data[6], rsp.data[7]), 
+      get_sequence_path(), rsp.get_request().get_addr(), rsp.get_response().get_data().get(0), rsp.get_response().get_data().get(1), rsp.get_response().get_data().get(2),
+      rsp.get_response().get_data().get(3), rsp.get_response().get_data().get(4), rsp.get_response().get_data().get(5), rsp.get_response().get_data().get(6), rsp.get_response().get_data().get(7)), 
       UVM_HIGH);
   endtask
   
@@ -201,15 +201,15 @@ class write_byte_seq extends ubus_base_sequence;
 
   virtual task body();
     `uvm_do_with(req, 
-      { req.addr == start_addr;
-        req.read_write == WRITE;
-        req.size == 1;
-        req.data[0] == data0;
-        req.error_pos == 1000;
-        req.transmit_delay == transmit_del; } )
+      { req.request_constraints.addr == start_addr;
+        req.request_constraints.read_write == WRITE;
+        req.request_constraints.size == 1;
+        req.request_constraints.data[0] == data0;
+        req.request_constraints.error_pos == 1000;
+        req.request_constraints.transmit_delay == transmit_del; } )
     `uvm_info(get_type_name(),
       $sformatf("%s wrote : addr = `x%0h, data[0] = `x%0h",
-      get_sequence_path(), req.addr, req.data[0]),
+      get_sequence_path(), req.get_request().get_addr(), req.get_request().get_data().get(0)),
       UVM_HIGH);
   endtask
 
@@ -238,15 +238,15 @@ class write_half_word_seq extends ubus_base_sequence;
 
   virtual task body();
     `uvm_do_with(req, 
-      { req.addr == start_addr; 
-        req.read_write == WRITE;
-        req.size == 2; 
-        req.data[0] == data0; req.data[1] == data1;
-        req.error_pos == 1000; 
-        req.transmit_delay == transmit_del; } )
+      { req.request_constraints.addr == start_addr; 
+        req.request_constraints.read_write == WRITE;
+        req.request_constraints.size == 2; 
+        req.request_constraints.data[0] == data0; req.request_constraints.data[1] == data1;
+        req.request_constraints.error_pos == 1000; 
+        req.request_constraints.transmit_delay == transmit_del; } )
     `uvm_info(get_type_name(),
       $sformatf("%s wrote : addr = `x%0h, data[0] = `x%0h, data[1] = `x%0h",
-      get_sequence_path(), req.addr, req.data[0], req.data[1]), UVM_HIGH);
+      get_sequence_path(), req.get_request().get_addr(), req.get_request().get_data().get(0), req.get_request().get_data().get(1)), UVM_HIGH);
   endtask
 
 endclass : write_half_word_seq
@@ -274,18 +274,18 @@ class write_word_seq extends ubus_base_sequence;
 
   virtual task body();
     `uvm_do_with(req, 
-      { req.addr == start_addr;
-        req.read_write == WRITE;
-        req.size == 4;
-         req.data[0] == data0; req.data[1] == data1;
-         req.data[2] == data2; req.data[3] == data3;
-        req.error_pos == 1000;
-        req.transmit_delay == transmit_del; } )
+      { req.request_constraints.addr == start_addr;
+        req.request_constraints.read_write == WRITE;
+        req.request_constraints.size == 4;
+         req.request_constraints.data[0] == data0; req.request_constraints.data[1] == data1;
+         req.request_constraints.data[2] == data2; req.request_constraints.data[3] == data3;
+        req.request_constraints.error_pos == 1000;
+        req.request_constraints.transmit_delay == transmit_del; } )
     `uvm_info(get_type_name(),
       $sformatf("%s wrote : addr = `x%0h, data[0] = `x%0h, \
       data[1] = `x%0h, data[2] = `x%0h, data[3] = `x%0h", 
-      get_sequence_path(), req.addr, req.data[0],
-      req.data[1], req.data[2], req.data[3]),
+      get_sequence_path(), req.get_request().get_addr(), req.get_request().get_data().get(0),
+      req.get_request().get_data().get(1), req.get_request().get_data().get(2), req.get_request().get_data().get(3)),
       UVM_HIGH);
   endtask
 
@@ -316,21 +316,21 @@ class write_double_word_seq extends ubus_base_sequence;
 
   virtual task body();
     `uvm_do_with(req, 
-      { req.addr == start_addr;
-        req.read_write == WRITE;
-        req.size == 8;
-         req.data[0] == data0; req.data[1] == data1;
-         req.data[2] == data2; req.data[3] == data3;
-         req.data[4] == data4; req.data[5] == data5;
-         req.data[6] == data6; req.data[7] == data7;
-        req.error_pos == 1000;
-        req.transmit_delay == transmit_del; } )
+      { req.request_constraints.addr == start_addr;
+        req.request_constraints.read_write == WRITE;
+        req.request_constraints.size == 8;
+         req.request_constraints.data[0] == data0; req.request_constraints.data[1] == data1;
+         req.request_constraints.data[2] == data2; req.request_constraints.data[3] == data3;
+         req.request_constraints.data[4] == data4; req.request_constraints.data[5] == data5;
+         req.request_constraints.data[6] == data6; req.request_constraints.data[7] == data7;
+        req.request_constraints.error_pos == 1000;
+        req.request_constraints.transmit_delay == transmit_del; } )
     `uvm_info(get_type_name(),
       $sformatf("Writing  %s : addr = `x%0h, data[0] = `x%0h, \
       data[1] = `x%0h, data[2] = `x%0h, data[3] = `x%0h, data[4] = `x%0h, \
       data[5] = `x%0h, data[6] = `x%0h, data[7] = `x%0h",
-      get_sequence_path(), req.addr, req.data[0], req.data[1], req.data[2], 
-      req.data[3], req.data[4], req.data[5], req.data[6], req.data[7]), 
+      get_sequence_path(), req.get_request().get_addr(), req.get_request().get_data().get(0), req.get_request().get_data().get(1), req.get_request().get_data().get(2), 
+      req.get_request().get_data().get(3), req.get_request().get_data().get(4), req.get_request().get_data().get(5), req.get_request().get_data().get(6), req.get_request().get_data().get(7)), 
       UVM_HIGH);
   endtask
 

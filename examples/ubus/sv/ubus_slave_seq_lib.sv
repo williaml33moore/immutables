@@ -51,9 +51,9 @@ class simple_response_seq extends uvm_sequence #(ubus_transfer);
       // to be stopped in the middle of a transfer.
       uvm_test_done.raise_objection(this);
       `uvm_do_with(req, 
-        { req.read_write == util_transfer.read_write; 
-          req.size == util_transfer.size; 
-          req.error_pos == 1000; } )
+        { req.request_constraints.read_write == util_transfer.get_request().get_read_write(); 
+          req.request_constraints.size == util_transfer.get_request().get_size(); 
+          req.request_constraints.error_pos == 1000; } )
       uvm_test_done.drop_objection(this);
     end
   endtask : body
@@ -83,32 +83,37 @@ class slave_memory_seq extends uvm_sequence #(ubus_transfer);
   int unsigned m_mem[int unsigned];
 
   virtual task pre_do(bit is_item);
+    rand_ubus_req tmp_req;
+    
     // Update the properties that are relevant to both read and write
-    req.size       = util_transfer.size;
-    req.addr       = util_transfer.addr;             
-    req.read_write = util_transfer.read_write;             
-    req.error_pos  = 1000;             
-    req.transmit_delay = 0;
-    req.data = new[util_transfer.size];
-    req.wait_state = new[util_transfer.size];
-    for(int unsigned i = 0 ; i < util_transfer.size ; i ++) begin
-      req.wait_state[i] = 2;
+    tmp_req = rand_ubus_req::type_id::create("request");
+    if (req.get_request() != null) tmp_req.copy(req.get_request());
+    tmp_req.size       = util_transfer.get_request().get_size();
+    tmp_req.addr       = util_transfer.get_request().get_addr();             
+    tmp_req.read_write = util_transfer.get_request().get_read_write();             
+    tmp_req.error_pos  = 1000;             
+    tmp_req.transmit_delay = 0;
+    tmp_req.data = new[util_transfer.get_request().get_size()];
+    tmp_req.wait_state = new[util_transfer.get_request().get_size()];
+    for(int unsigned i = 0 ; i < util_transfer.get_request().get_size() ; i ++) begin
+      tmp_req.wait_state[i] = 2;
       // For reads, populate req with the random "readback" data of the size
       // requested in util_transfer
-      if( req.read_write == READ ) begin : READ_block
-        if (!m_mem.exists(util_transfer.addr + i)) begin
-          m_mem[util_transfer.addr + i] = $urandom;
+      if( tmp_req.read_write == READ ) begin : READ_block
+        if (!m_mem.exists(util_transfer.get_request().get_addr() + i)) begin
+          m_mem[util_transfer.get_request().get_addr() + i] = $urandom;
         end
-        req.data[i] = m_mem[util_transfer.addr + i];
+        tmp_req.data[i] = m_mem[util_transfer.get_request().get_addr() + i];
       end
     end
+    req.set_request(tmp_req);
   endtask
 
-  function void post_do(uvm_sequence_item this_item);
+  function void post_do(uvm_sequence_item this_item);$error();util_transfer.print();req.print();
     // For writes, update the m_mem associative array
-    if( util_transfer.read_write == WRITE ) begin : WRITE_block
-      for(int unsigned i = 0 ; i < req.size ; i ++) begin : for_block
-        m_mem[req.addr + i] = req.data[i];
+    if( util_transfer.get_request().get_read_write() == WRITE ) begin : WRITE_block
+      for(int unsigned i = 0 ; i < req.get_request().get_size() ; i ++) begin : for_block
+        m_mem[req.get_request().get_addr() + i] = req.get_request().get_data().get(i);
       end : for_block
     end
   endfunction
@@ -117,7 +122,7 @@ class slave_memory_seq extends uvm_sequence #(ubus_transfer);
      uvm_phase p;
     `uvm_info(get_type_name(),
       $sformatf("%s starting...",
-      get_sequence_path()), UVM_MEDIUM);
+      get_sequence_path()), UVM_MEDIUM)
 
     $cast(req, create_item(ubus_transfer::get_type(), p_sequencer, "req"));
     p = get_starting_phase();
@@ -130,8 +135,8 @@ class slave_memory_seq extends uvm_sequence #(ubus_transfer);
       // to be stopped in the middle of a transfer.
       p.raise_objection(this);
 
-      start_item(req);
-      finish_item(req);
+      start_item(req);$error("util_transfer");util_transfer.print();$error("req");req.print();
+      finish_item(req);$error("req");req.print();
 
       p.drop_objection(this);
     end

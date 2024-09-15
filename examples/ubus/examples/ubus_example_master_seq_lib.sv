@@ -193,8 +193,8 @@ class read_modify_write_seq extends ubus_base_sequence;
       get_sequence_path()), UVM_MEDIUM);
     // READ A RANDOM LOCATION
     `uvm_do_with(read_byte_seq0, {read_byte_seq0.transmit_del == 0; })
-    addr_check = read_byte_seq0.rsp.addr;
-    m_data0_check = read_byte_seq0.rsp.data[0] + 1;
+    addr_check = read_byte_seq0.rsp.get_request().get_addr();
+    m_data0_check = read_byte_seq0.rsp.get_response().get_data().get(0) + 1;
     // WRITE MODIFIED READ DATA
     `uvm_do_with(write_byte_seq0,
       { write_byte_seq0.start_addr == addr_check;
@@ -202,10 +202,10 @@ class read_modify_write_seq extends ubus_base_sequence;
     // READ MODIFIED WRITE DATA
     `uvm_do_with(read_byte_seq0,
       { read_byte_seq0.start_addr == addr_check; } )
-    assert(m_data0_check == read_byte_seq0.rsp.data[0]) else
+    assert(m_data0_check == read_byte_seq0.rsp.get_response().get_data().get(0)) else
       `uvm_error(get_type_name(),
         $sformatf("%s Read Modify Write Read error!\n\tADDR: %h, EXP: %h, ACT: %h", 
-        get_sequence_path(),addr_check,m_data0_check,read_byte_seq0.rsp.data[0]));
+        get_sequence_path(),addr_check,m_data0_check,read_byte_seq0.rsp.get_response().get_data().get(0)));
   endtask : body
 
 endclass : read_modify_write_seq

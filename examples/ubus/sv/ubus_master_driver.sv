@@ -59,15 +59,19 @@ class ubus_master_driver extends uvm_driver #(ubus_transfer);
 
   // get_and_drive 
   virtual protected task get_and_drive();
+    ubus_req bus_req;
+    rand_ubus_rsp bus_rsp;
     @(negedge vif.sig_reset);
     forever begin
       @(posedge vif.sig_clock);
       seq_item_port.get_next_item(req);
-      $cast(rsp, req.clone());
-      rsp.set_id_info(req);
-      drive_transfer(rsp);
+      bus_req = req.get_request();
+      bus_rsp = rand_ubus_rsp::type_id::create("bus_rsp");
+      bus_rsp.data = new[bus_req.get_size()];
+      drive_transfer(bus_req, bus_rsp);
       seq_item_port.item_done();
-      seq_item_port.put_response(rsp);
+      req.set_response(bus_rsp);
+      seq_item_port.put_response(req);
     end
   endtask : get_and_drive
 
@@ -87,13 +91,13 @@ class ubus_master_driver extends uvm_driver #(ubus_transfer);
   endtask : reset_signals
 
   // drive_transfer
-  virtual protected task drive_transfer (ubus_transfer trans);
-    if (trans.transmit_delay > 0) begin
-      repeat(trans.transmit_delay) @(posedge vif.sig_clock);
+  virtual protected task drive_transfer (ubus_req bus_req, rand_ubus_rsp bus_rsp);
+    if (bus_req.get_transmit_delay() > 0) begin
+      repeat(bus_req.get_transmit_delay()) @(posedge vif.sig_clock);
     end
     arbitrate_for_bus();
-    drive_address_phase(trans);
-    drive_data_phase(trans);
+    drive_address_phase(bus_req);
+    drive_data_phase(bus_req, bus_rsp);
   endtask : drive_transfer
 
   // arbitrate_for_bus
@@ -104,10 +108,10 @@ class ubus_master_driver extends uvm_driver #(ubus_transfer);
   endtask : arbitrate_for_bus
 
   // drive_address_phase
-  virtual protected task drive_address_phase (ubus_transfer trans);
-    vif.sig_addr <= trans.addr;
-    drive_size(trans.size);
-    drive_read_write(trans.read_write);
+  virtual protected task drive_address_phase (ubus_req trans);
+    vif.sig_addr <= trans.get_addr();
+    drive_size(trans.get_size());
+    drive_read_write(trans.get_read_write());
     @(posedge vif.sig_clock);
     vif.sig_addr <= 32'bz;
     vif.sig_size <= 2'bz;
@@ -116,16 +120,16 @@ class ubus_master_driver extends uvm_driver #(ubus_transfer);
   endtask : drive_address_phase
 
   // drive_data_phase
-  virtual protected task drive_data_phase (ubus_transfer trans);
+  virtual protected task drive_data_phase (ubus_req bus_req, rand_ubus_rsp bus_rsp);
     bit err;
-    for(int i = 0; i <= trans.size - 1; i ++) begin
-      if (i == (trans.size - 1))
+    for(int i = 0; i <= bus_req.get_size() - 1; i ++) begin
+      if (i == (bus_req.get_size() - 1))
         vif.sig_bip <= 0;
       else
         vif.sig_bip <= 1;
-      case (trans.read_write)
-        READ    : read_byte(trans.data[i], err);
-        WRITE   : write_byte(trans.data[i], err);
+      case (bus_req.get_read_write())
+        READ    : read_byte(bus_rsp.data[i], err);
+        WRITE   : write_byte(bus_req.get_data().get(i), err);
       endcase
     end //for loop
     vif.sig_data_out <= 8'bz;

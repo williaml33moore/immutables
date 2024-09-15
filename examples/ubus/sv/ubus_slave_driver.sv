@@ -48,8 +48,19 @@ class ubus_slave_driver extends uvm_driver #(ubus_transfer);
     fork
       get_and_drive();
       reset_signals();
+      debug();
     join
   endtask : run_phase
+
+  task debug();
+    struct {logic[15:0] sig_addr; logic[7:0] sig_data; logic rw; logic sig_bip;} sigs;
+
+    forever begin
+      @(posedge vif.sig_clock);
+      sigs = '{sig_addr: vif.sig_addr, sig_data: vif.sig_data, rw: vif.rw, sig_bip: vif.sig_bip};
+      $display($sformatf("%p", sigs));
+    end
+  endtask : debug
 
   // get_and_drive
   virtual protected task get_and_drive();
@@ -57,7 +68,7 @@ class ubus_slave_driver extends uvm_driver #(ubus_transfer);
     forever begin
       @(posedge vif.sig_clock);
       seq_item_port.get_next_item(req);
-      respond_to_transfer(req);
+      respond_to_transfer(req);$error();req.print();
       seq_item_port.item_done();
     end
   endtask : get_and_drive
@@ -73,33 +84,36 @@ class ubus_slave_driver extends uvm_driver #(ubus_transfer);
   endtask : reset_signals
 
   // respond_to_transfer
-  virtual protected task respond_to_transfer(ubus_transfer resp);
-    if (resp.read_write != NOP)
+  virtual protected task respond_to_transfer(ubus_transfer trans);
+    ubus_req bus_req;
+
+    bus_req = req.get_request();
+    if (bus_req.get_read_write() != NOP)
     begin
       vif.sig_error <= 1'b0;
-      for (int i = 0; i < resp.size; i++)
+      for (int i = 0; i < bus_req.get_size(); i++)
       begin
-        case (resp.read_write)
+        case (bus_req.get_read_write())
           READ : begin
             vif.rw <= 1'b1;
-            vif.sig_data_out <= resp.data[i];
+            vif.sig_data_out <= bus_req.get_data().get(i);
           end
           WRITE : begin
           end
         endcase
-        if (resp.wait_state[i] > 0) begin
+        if (bus_req.get_wait_state().get(i) > 0) begin
           vif.sig_wait <= 1'b1;
-          repeat (resp.wait_state[i])
+          repeat (bus_req.get_wait_state().get(i))
             @(posedge vif.sig_clock);
         end
         vif.sig_wait <= 1'b0;
         @(posedge vif.sig_clock);
-        resp.data[i] = vif.sig_data;
       end
       vif.rw <= 1'b0;
       vif.sig_wait  <= 1'bz;
       vif.sig_error <= 1'bz;
     end
+    trans.set_response(null);
   endtask : respond_to_transfer
 
 endclass : ubus_slave_driver

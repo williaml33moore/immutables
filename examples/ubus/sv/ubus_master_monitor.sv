@@ -44,6 +44,8 @@ class ubus_master_monitor extends uvm_monitor;
   // The following property holds the transaction information currently
   // begin captured (by the collect_address_phase and data_phase methods). 
   protected ubus_transfer trans_collected;
+  rand_ubus_req bus_req;
+  rand_ubus_rsp bus_rsp;
 
   // Fields to hold trans addr, data and wait_state.
   protected bit [15:0] addr;
@@ -53,10 +55,10 @@ class ubus_master_monitor extends uvm_monitor;
   // Transfer collected covergroup
   covergroup cov_trans;
     option.per_instance = 1;
-    trans_start_addr : coverpoint trans_collected.addr {
+    trans_start_addr : coverpoint bus_req.addr {
       option.auto_bin_max = 16; }
-    trans_dir : coverpoint trans_collected.read_write;
-    trans_size : coverpoint trans_collected.size {
+    trans_dir : coverpoint bus_req.read_write;
+    trans_size : coverpoint bus_req.size {
       bins sizes[] = {1, 2, 4, 8};
       illegal_bins invalid_sizes = default; }
     trans_addrXdir : cross trans_start_addr, trans_dir;
@@ -68,7 +70,7 @@ class ubus_master_monitor extends uvm_monitor;
     option.per_instance = 1;
     beat_addr : coverpoint addr {
       option.auto_bin_max = 16; }
-    beat_dir : coverpoint trans_collected.read_write;
+    beat_dir : coverpoint bus_req.read_write;
     beat_data : coverpoint data {
       option.auto_bin_max = 8; }
     beat_wait : coverpoint wait_state {
@@ -116,6 +118,8 @@ class ubus_master_monitor extends uvm_monitor;
       @(posedge vif.sig_clock);
       if (m_parent != null)
         trans_collected.master = m_parent.get_name();
+      bus_req = rand_ubus_req::type_id::create("bus_req");
+      bus_rsp = rand_ubus_rsp::type_id::create("bus_rsp");
       collect_arbitration_phase();
       collect_address_phase();
       collect_data_phase();
@@ -139,29 +143,46 @@ class ubus_master_monitor extends uvm_monitor;
   // collect_address_phase
   virtual protected task collect_address_phase();
     @(posedge vif.sig_clock);
-    trans_collected.addr = vif.sig_addr;
+    bus_req.addr = vif.sig_addr;
     case (vif.sig_size)
-      2'b00 : trans_collected.size = 1;
-      2'b01 : trans_collected.size = 2;
-      2'b10 : trans_collected.size = 4;
-      2'b11 : trans_collected.size = 8;
+      2'b00 : bus_req.size = 1;
+      2'b01 : bus_req.size = 2;
+      2'b10 : bus_req.size = 4;
+      2'b11 : bus_req.size = 8;
     endcase
-    trans_collected.data = new[trans_collected.size];
+    bus_rsp.data = new[bus_req.size];
     case ({vif.sig_read,vif.sig_write})
-      2'b00 : trans_collected.read_write = NOP;
-      2'b10 : trans_collected.read_write = READ;
-      2'b01 : trans_collected.read_write = WRITE;
+      2'b00 : bus_req.read_write = NOP;
+      2'b10 : bus_req.read_write = READ;
+      2'b01 : bus_req.read_write = WRITE;
     endcase
   endtask : collect_address_phase
 
   // collect_data_phase
   virtual protected task collect_data_phase();
     int i;
-    if (trans_collected.read_write != NOP)
-      for (i = 0; i < trans_collected.size; i++) begin
-        @(posedge vif.sig_clock iff vif.sig_wait === 0);
-        trans_collected.data[i] = vif.sig_data;
+    case (bus_req.read_write)
+      READ : begin
+        bus_req.data = new[0];
+        bus_rsp.data = new[bus_req.size];
       end
+      WRITE : begin
+        bus_req.data = new[bus_req.size];
+        bus_rsp.data = new[0];
+      end
+      default : `uvm_fatal("collect_data_phase", {"Unexpected read_write: ", bus_req.read_write.name()})
+    endcase
+    if (bus_req.read_write != NOP)
+      for (i = 0; i < bus_req.size; i++) begin
+        @(posedge vif.sig_clock iff vif.sig_wait === 0);
+        case (bus_req.read_write)
+          READ : bus_rsp.data[i] = vif.sig_data;
+          WRITE : bus_req.data[i] = vif.sig_data;
+        default : `uvm_fatal("collect_data_phase", {"Unexpected read_write: ", bus_req.read_write.name()})
+      endcase
+      end
+    trans_collected.set_request(bus_req);
+    trans_collected.set_response(bus_rsp);
     this.end_tr(trans_collected);
   endtask : collect_data_phase
 
@@ -173,9 +194,9 @@ class ubus_master_monitor extends uvm_monitor;
 
   // check_transfer_size
   virtual protected function void check_transfer_size();
-    assert_transfer_size : assert(trans_collected.size == 1 || 
-      trans_collected.size == 2 || trans_collected.size == 4 || 
-      trans_collected.size == 8) else begin
+    assert_transfer_size : assert(bus_req.size == 1 || 
+      bus_req.size == 2 || bus_req.size == 4 || 
+      bus_req.size == 8) else begin
       `uvm_error(get_type_name(),
         "Invalid transfer size!")
     end
@@ -183,7 +204,7 @@ class ubus_master_monitor extends uvm_monitor;
 
   // check_transfer_data_size
   virtual protected function void check_transfer_data_size();
-    if (trans_collected.size != trans_collected.data.size())
+    if (bus_req.size != (bus_req.read_write == READ) ? bus_rsp.data.size() : bus_req.data.size())
       `uvm_error(get_type_name(),
         "Transfer size field / data size mismatch.")
   endfunction : check_transfer_data_size
@@ -191,9 +212,9 @@ class ubus_master_monitor extends uvm_monitor;
   // perform_transfer_coverage
   virtual protected function void perform_transfer_coverage();
     cov_trans.sample();
-    for (int unsigned i = 0; i < trans_collected.size; i++) begin
-      addr = trans_collected.addr + i;
-      data = trans_collected.data[i];
+    for (int unsigned i = 0; i < bus_req.size; i++) begin
+      addr = bus_req.addr + i;
+      data = bus_rsp.data[i];
 //Wait state is not currently monitored
 //      wait_state = trans_collected.wait_state[i];
       cov_trans_beat.sample();
