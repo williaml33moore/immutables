@@ -84,17 +84,19 @@ class slave_memory_seq extends uvm_sequence #(ubus_transfer);
 
   virtual task pre_do(bit is_item);
     rand_ubus_req tmp_req;
+    rand_ubus_rsp tmp_rsp;
     
     // Update the properties that are relevant to both read and write
     tmp_req = rand_ubus_req::type_id::create("request");
+    tmp_rsp = rand_ubus_rsp::type_id::create("response");
     if (req.get_request() != null) tmp_req.copy(req.get_request());
     tmp_req.size       = util_transfer.get_request().get_size();
     tmp_req.addr       = util_transfer.get_request().get_addr();             
     tmp_req.read_write = util_transfer.get_request().get_read_write();             
     tmp_req.error_pos  = 1000;             
     tmp_req.transmit_delay = 0;
-    tmp_req.data = new[util_transfer.get_request().get_size()];
     tmp_req.wait_state = new[util_transfer.get_request().get_size()];
+    tmp_rsp.data = new[util_transfer.get_request().get_size()];
     for(int unsigned i = 0 ; i < util_transfer.get_request().get_size() ; i ++) begin
       tmp_req.wait_state[i] = 2;
       // For reads, populate req with the random "readback" data of the size
@@ -103,13 +105,14 @@ class slave_memory_seq extends uvm_sequence #(ubus_transfer);
         if (!m_mem.exists(util_transfer.get_request().get_addr() + i)) begin
           m_mem[util_transfer.get_request().get_addr() + i] = $urandom;
         end
-        tmp_req.data[i] = m_mem[util_transfer.get_request().get_addr() + i];
+        tmp_rsp.data[i] = m_mem[util_transfer.get_request().get_addr() + i];
       end
     end
     req.set_request(tmp_req);
+    req.set_response(tmp_rsp);
   endtask
 
-  function void post_do(uvm_sequence_item this_item);$error();util_transfer.print();req.print();
+  function void post_do(uvm_sequence_item this_item);
     // For writes, update the m_mem associative array
     if( util_transfer.get_request().get_read_write() == WRITE ) begin : WRITE_block
       for(int unsigned i = 0 ; i < req.get_request().get_size() ; i ++) begin : for_block
@@ -135,8 +138,8 @@ class slave_memory_seq extends uvm_sequence #(ubus_transfer);
       // to be stopped in the middle of a transfer.
       p.raise_objection(this);
 
-      start_item(req);$error("util_transfer");util_transfer.print();$error("req");req.print();
-      finish_item(req);$error("req");req.print();
+      start_item(req);
+      finish_item(req);
 
       p.drop_objection(this);
     end

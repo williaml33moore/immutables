@@ -57,7 +57,7 @@ class ubus_slave_driver extends uvm_driver #(ubus_transfer);
     forever begin
       @(posedge vif.sig_clock);
       seq_item_port.get_next_item(req);
-      respond_to_transfer(req);$error();req.print();
+      respond_to_transfer(req);
       seq_item_port.item_done();
     end
   endtask : get_and_drive
@@ -75,17 +75,23 @@ class ubus_slave_driver extends uvm_driver #(ubus_transfer);
   // respond_to_transfer
   virtual protected task respond_to_transfer(ubus_transfer trans);
     ubus_req bus_req;
+    ubus_rsp bus_rsp;
+    rand_ubus_req updated_req;
 
-    bus_req = req.get_request();
+    bus_req = trans.get_request();
+    bus_rsp = trans.get_response();
+    updated_req = rand_ubus_req::type_id::create("updated_req");
+    updated_req.copy(bus_req);
     if (bus_req.get_read_write() != NOP)
     begin
       vif.sig_error <= 1'b0;
+      if (bus_req.get_read_write() == WRITE) updated_req.data = new[bus_req.get_size()];
       for (int i = 0; i < bus_req.get_size(); i++)
       begin
         case (bus_req.get_read_write())
           READ : begin
             vif.rw <= 1'b1;
-            vif.sig_data_out <= bus_req.get_data().get(i);
+            vif.sig_data_out <= bus_rsp.get_data().get(i);
           end
           WRITE : begin
           end
@@ -97,12 +103,13 @@ class ubus_slave_driver extends uvm_driver #(ubus_transfer);
         end
         vif.sig_wait <= 1'b0;
         @(posedge vif.sig_clock);
+        if (bus_req.get_read_write() == WRITE) updated_req.data[i] = vif.sig_data;
       end
       vif.rw <= 1'b0;
       vif.sig_wait  <= 1'bz;
       vif.sig_error <= 1'bz;
     end
-    trans.set_response(null);
+    trans.set_request(updated_req);
   endtask : respond_to_transfer
 
 endclass : ubus_slave_driver

@@ -153,7 +153,7 @@ class ubus_slave_monitor extends uvm_monitor;
         -> address_phase_grabbed;
         collect_data_phase();
         `uvm_info(get_type_name(), $sformatf("Transfer collected :\n%s",
-          trans_collected.sprint()), UVM_FULL) $error("trans_collected");trans_collected.print();
+          trans_collected.sprint()), UVM_FULL)
         if (checks_enable)
           perform_transfer_checks();
         if (coverage_enable)
@@ -237,7 +237,7 @@ class ubus_slave_monitor extends uvm_monitor;
 
   // check_transfer_data_size
   protected function void check_transfer_data_size();
-    if (bus_req.size != bus_req.data.size())
+    if (bus_req.size != (bus_req.read_write == READ) ? bus_rsp.data.size() : bus_req.data.size())
       `uvm_error(get_type_name(),
         "Transfer size field / data size mismatch.")
   endfunction : check_transfer_data_size
@@ -255,7 +255,7 @@ class ubus_slave_monitor extends uvm_monitor;
   endfunction : perform_transfer_coverage
 
   task peek(output ubus_transfer trans);
-    @address_phase_grabbed;$error("trans_collected");trans_collected.print();
+    @address_phase_grabbed;
     trans = trans_collected;
   endtask : peek
 
