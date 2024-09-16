@@ -67,7 +67,7 @@ class ubus_master_driver extends uvm_driver #(ubus_transfer);
       seq_item_port.get_next_item(req);
       bus_req = req.get_request();
       bus_rsp = rand_ubus_rsp::type_id::create("bus_rsp");
-      bus_rsp.data = new[bus_req.get_size()];
+      bus_rsp.data$ = new[bus_req.size];
       drive_transfer(bus_req, bus_rsp);
       seq_item_port.item_done();
       req.set_response(bus_rsp);
@@ -92,8 +92,8 @@ class ubus_master_driver extends uvm_driver #(ubus_transfer);
 
   // drive_transfer
   virtual protected task drive_transfer (ubus_req bus_req, rand_ubus_rsp bus_rsp);
-    if (bus_req.get_transmit_delay() > 0) begin
-      repeat(bus_req.get_transmit_delay()) @(posedge vif.sig_clock);
+    if (bus_req.transmit_delay > 0) begin
+      repeat(bus_req.transmit_delay) @(posedge vif.sig_clock);
     end
     arbitrate_for_bus();
     drive_address_phase(bus_req);
@@ -109,9 +109,9 @@ class ubus_master_driver extends uvm_driver #(ubus_transfer);
 
   // drive_address_phase
   virtual protected task drive_address_phase (ubus_req trans);
-    vif.sig_addr <= trans.get_addr();
-    drive_size(trans.get_size());
-    drive_read_write(trans.get_read_write());
+    vif.sig_addr <= trans.addr;
+    drive_size(trans.size);
+    drive_read_write(trans.read_write);
     @(posedge vif.sig_clock);
     vif.sig_addr <= 32'bz;
     vif.sig_size <= 2'bz;
@@ -122,14 +122,14 @@ class ubus_master_driver extends uvm_driver #(ubus_transfer);
   // drive_data_phase
   virtual protected task drive_data_phase (ubus_req bus_req, rand_ubus_rsp bus_rsp);
     bit err;
-    for(int i = 0; i <= bus_req.get_size() - 1; i ++) begin
-      if (i == (bus_req.get_size() - 1))
+    for(int i = 0; i <= bus_req.size - 1; i ++) begin
+      if (i == (bus_req.size - 1))
         vif.sig_bip <= 0;
       else
         vif.sig_bip <= 1;
-      case (bus_req.get_read_write())
-        READ    : read_byte(bus_rsp.data[i], err);
-        WRITE   : write_byte(bus_req.get_data().get(i), err);
+      case (bus_req.read_write)
+        READ    : read_byte(bus_rsp.data$[i], err);
+        WRITE   : write_byte(bus_req.data().get(i), err);
       endcase
     end //for loop
     vif.sig_data_out <= 8'bz;

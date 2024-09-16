@@ -37,17 +37,17 @@ typedef enum { NOP,
 //------------------------------------------------------------------------------
 
 interface class ubus_req_if;
-  pure virtual function bit[15:0] get_addr();
-  pure virtual function ubus_read_write_enum get_read_write();
-  pure virtual function int unsigned get_size();
-  pure virtual function immutables_pkg::scalar_tuple#(bit[7:0]) get_data();
-  pure virtual function immutables_pkg::scalar_tuple#(bit[3:0]) get_wait_state();
-  pure virtual function int unsigned get_error_pos();
-  pure virtual function int unsigned get_transmit_delay();
+  pure virtual function bit[15:0] addr();
+  pure virtual function ubus_read_write_enum read_write();
+  pure virtual function int unsigned size();
+  pure virtual function immutables_pkg::scalar_tuple#(bit[7:0]) data();
+  pure virtual function immutables_pkg::scalar_tuple#(bit[3:0]) wait_state();
+  pure virtual function int unsigned error_pos();
+  pure virtual function int unsigned transmit_delay();
 endclass : ubus_req_if
 
 interface class ubus_rsp_if;
-  pure virtual function immutables_pkg::scalar_tuple#(bit[7:0]) get_data();
+  pure virtual function immutables_pkg::scalar_tuple#(bit[7:0]) data();
 endclass : ubus_rsp_if
 
 typedef class rand_ubus_req;
@@ -170,36 +170,36 @@ class rand_ubus_req extends uvm_object implements ubus_req_if;
   typedef bit[7:0] data_t;
   typedef bit[3:0] wait_state_t;
 
-  rand bit [15:0]           addr;
-  rand ubus_read_write_enum read_write;
-  rand int unsigned         size;
-  rand data_t               data[];
-  rand wait_state_t         wait_state[];
-  rand int unsigned         error_pos;
-  rand int unsigned         transmit_delay = 0;
+  rand bit [15:0]           addr$;
+  rand ubus_read_write_enum read_write$;
+  rand int unsigned         size$;
+  rand data_t               data$[];
+  rand wait_state_t         wait_state$[];
+  rand int unsigned         error_pos$;
+  rand int unsigned         transmit_delay$ = 0;
 
   constraint c_read_write {
-    read_write inside { READ, WRITE };
+    read_write$ inside { READ, WRITE };
   }
   constraint c_size {
-    size inside {1,2,4,8};
+    size$ inside {1,2,4,8};
   }
   constraint c_data_wait_size {
-    data.size() == size;
-    wait_state.size() == size;
+    data$.size() == size$;
+    wait_state$.size() == size$;
   }
   constraint c_transmit_delay { 
-    transmit_delay <= 10 ; 
+    transmit_delay$ <= 10 ; 
   }
 
   `uvm_object_utils_begin(rand_ubus_req)
-    `uvm_field_int      (addr,           UVM_DEFAULT)
-    `uvm_field_enum     (ubus_read_write_enum, read_write, UVM_DEFAULT)
-    `uvm_field_int      (size,           UVM_DEFAULT)
-    `uvm_field_array_int(data,           UVM_DEFAULT)
-    `uvm_field_array_int(wait_state,     UVM_DEFAULT)
-    `uvm_field_int      (error_pos,      UVM_DEFAULT)
-    `uvm_field_int      (transmit_delay, UVM_DEFAULT)
+    `uvm_field_int      (addr$,           UVM_DEFAULT)
+    `uvm_field_enum     (ubus_read_write_enum, read_write$, UVM_DEFAULT)
+    `uvm_field_int      (size$,           UVM_DEFAULT)
+    `uvm_field_array_int(data$,           UVM_DEFAULT)
+    `uvm_field_array_int(wait_state$,     UVM_DEFAULT)
+    `uvm_field_int      (error_pos$,      UVM_DEFAULT)
+    `uvm_field_int      (transmit_delay$, UVM_DEFAULT)
   `uvm_object_utils_end
 
   // new - constructor
@@ -207,49 +207,49 @@ class rand_ubus_req extends uvm_object implements ubus_req_if;
     super.new(name);
   endfunction : new
 
-  virtual function bit[15:0] get_addr();
-    return this.addr;
-  endfunction : get_addr
+  virtual function bit[15:0] addr();
+    return this.addr$;
+  endfunction : addr
 
-  virtual function ubus_read_write_enum get_read_write();
-    return this.read_write;
-  endfunction : get_read_write
+  virtual function ubus_read_write_enum read_write();
+    return this.read_write$;
+  endfunction : read_write
 
-  virtual function int unsigned get_size();
-    return this.size;
-  endfunction : get_size
+  virtual function int unsigned size();
+    return this.size$;
+  endfunction : size
 
-  virtual function immutables_pkg::scalar_tuple#(data_t) get_data();
+  virtual function immutables_pkg::scalar_tuple#(data_t) data();
     immutables_pkg::scalar_tuple#(data_t) data_tuple;
-    data_tuple = immutables_pkg::scalar_tuple#(data_t)::create_new("data", this.data);
+    data_tuple = immutables_pkg::scalar_tuple#(data_t)::create_new("data", this.data$);
     return data_tuple;
-  endfunction : get_data
+  endfunction : data
 
-  virtual function immutables_pkg::scalar_tuple#(wait_state_t) get_wait_state();
+  virtual function immutables_pkg::scalar_tuple#(wait_state_t) wait_state();
     immutables_pkg::scalar_tuple#(wait_state_t) wait_state_tuple;
-    wait_state_tuple = immutables_pkg::scalar_tuple#(wait_state_t)::create_new("wait_state", this.wait_state);
+    wait_state_tuple = immutables_pkg::scalar_tuple#(wait_state_t)::create_new("wait_state", this.wait_state$);
     return wait_state_tuple;
-  endfunction : get_wait_state
+  endfunction : wait_state
 
-  virtual function int unsigned get_error_pos();
-    return this.error_pos;
-  endfunction : get_error_pos
+  virtual function int unsigned error_pos();
+    return this.error_pos$;
+  endfunction : error_pos
 
-  virtual function int unsigned get_transmit_delay();
-    return this.transmit_delay;
-  endfunction : get_transmit_delay
+  virtual function int unsigned transmit_delay();
+    return this.transmit_delay$;
+  endfunction : transmit_delay
 
   virtual function void do_copy (uvm_object rhs);
     ubus_req_if rhs_;
     super.do_copy(rhs);
     $cast(rhs_, rhs);
-    this.addr = rhs_.get_addr();
-    this.read_write = rhs_.get_read_write();
-    this.size = rhs_.get_size();
-    rhs_.get_data().to_queue(this.data);
-    rhs_.get_wait_state().to_queue(this.wait_state);
-    this.error_pos = rhs_.get_error_pos();
-    this.transmit_delay = rhs_.get_transmit_delay;
+    this.addr$ = rhs_.addr();
+    this.read_write$ = rhs_.read_write();
+    this.size$ = rhs_.size();
+    rhs_.data().to_queue(this.data$);
+    rhs_.wait_state().to_queue(this.wait_state$);
+    this.error_pos$ = rhs_.error_pos();
+    this.transmit_delay$ = rhs_.transmit_delay;
   endfunction : do_copy
 
 endclass : rand_ubus_req
@@ -280,15 +280,15 @@ class ubus_req extends immutables_pkg::immutable_object implements ubus_req_if;
     );
     super.new(name);
     values = rand_ubus_req::type_id::create("values");
-    values.addr = addr;
-    values.read_write = read_write;
-    values.size = size;
-    values.data = new[data.size()](data);
-    data_tuple = values.get_data();
-    values.wait_state = new[wait_state.size()](wait_state);
-    wait_state_tuple = values.get_wait_state();
-    values.error_pos = error_pos;
-    values.transmit_delay = transmit_delay;
+    values.addr$ = addr;
+    values.read_write$ = read_write;
+    values.size$ = size;
+    values.data$ = new[data.size()](data);
+    data_tuple = values.data();
+    values.wait_state$ = new[wait_state.size()](wait_state);
+    wait_state_tuple = values.wait_state();
+    values.error_pos$ = error_pos;
+    values.transmit_delay$ = transmit_delay;
   endfunction : new
 
   static function ubus_req create_new (string name = "ubus_req",
@@ -321,47 +321,47 @@ class ubus_req extends immutables_pkg::immutable_object implements ubus_req_if;
     success = $cast(rhs_, rhs);
     type_check : assert (success) else
       `uvm_fatal("TYPE_CHECK", {"Failed to cast object ", rhs.get_name(), " to ubus_req_if"})
-    rhs_.get_data().to_queue(data);
-    rhs_.get_wait_state().to_queue(wait_state);
+    rhs_.data().to_queue(data);
+    rhs_.wait_state().to_queue(wait_state);
 
     product = new(name,
-      rhs_.get_addr(),
-      rhs_.get_read_write(),
-      rhs_.get_size(),
+      rhs_.addr(),
+      rhs_.read_write(),
+      rhs_.size(),
       data,
       wait_state,
-      rhs_.get_error_pos(),
-      rhs_.get_transmit_delay());
+      rhs_.error_pos(),
+      rhs_.transmit_delay());
     return product;
   endfunction : create_copy
 
-  virtual function bit[15:0] get_addr();
-    return values.get_addr();
-  endfunction : get_addr
+  virtual function bit[15:0] addr();
+    return values.addr();
+  endfunction : addr
 
-  virtual function ubus_read_write_enum get_read_write();
-    return values.get_read_write();
-  endfunction : get_read_write
+  virtual function ubus_read_write_enum read_write();
+    return values.read_write();
+  endfunction : read_write
 
-  virtual function int unsigned get_size();
-    return values.get_size();
-  endfunction : get_size
+  virtual function int unsigned size();
+    return values.size();
+  endfunction : size
 
-  virtual function immutables_pkg::scalar_tuple#(data_t) get_data();
+  virtual function immutables_pkg::scalar_tuple#(data_t) data();
     return this.data_tuple;
-  endfunction : get_data
+  endfunction : data
 
-  virtual function immutables_pkg::scalar_tuple#(wait_state_t) get_wait_state();
+  virtual function immutables_pkg::scalar_tuple#(wait_state_t) wait_state();
     return this.wait_state_tuple;
-  endfunction : get_wait_state
+  endfunction : wait_state
 
-  virtual function int unsigned get_error_pos();
-    return values.get_error_pos();
-  endfunction : get_error_pos
+  virtual function int unsigned error_pos();
+    return values.error_pos();
+  endfunction : error_pos
 
-  virtual function int unsigned get_transmit_delay();
-    return values.get_transmit_delay();
-  endfunction : get_transmit_delay
+  virtual function int unsigned transmit_delay();
+    return values.transmit_delay();
+  endfunction : transmit_delay
 
 endclass : ubus_req
 
@@ -370,14 +370,14 @@ class rand_ubus_rsp extends uvm_object implements ubus_rsp_if;
 
   typedef bit[7:0] data_t;
 
-  rand data_t data[];
+  rand data_t data$[];
 
   constraint c_data_size {
-    soft data.size() == 1;
+    soft data$.size() == 1;
   }
 
   `uvm_object_utils_begin(rand_ubus_rsp)
-    `uvm_field_array_int(data, UVM_DEFAULT)
+    `uvm_field_array_int(data$, UVM_DEFAULT)
   `uvm_object_utils_end
 
   // new - constructor
@@ -385,11 +385,11 @@ class rand_ubus_rsp extends uvm_object implements ubus_rsp_if;
     super.new(name);
   endfunction : new
 
-  virtual function immutables_pkg::scalar_tuple#(data_t) get_data();
+  virtual function immutables_pkg::scalar_tuple#(data_t) data();
     immutables_pkg::scalar_tuple#(data_t) data_tuple;
-    data_tuple = immutables_pkg::scalar_tuple#(data_t)::create_new("data", this.data);
+    data_tuple = immutables_pkg::scalar_tuple#(data_t)::create_new("data", this.data$);
     return data_tuple;
-  endfunction : get_data
+  endfunction : data
 
 endclass : rand_ubus_rsp
 
@@ -411,8 +411,8 @@ class ubus_rsp extends immutables_pkg::immutable_object implements ubus_rsp_if;
     );
     super.new(name);
     values = rand_ubus_rsp::type_id::create("values");
-    values.data = new[data.size()](data);
-    data_tuple = values.get_data();
+    values.data$ = new[data.size()](data);
+    data_tuple = values.data();
   endfunction : new
 
   static function ubus_rsp create_new (string name = "ubus_rsp",
@@ -433,7 +433,7 @@ class ubus_rsp extends immutables_pkg::immutable_object implements ubus_rsp_if;
     success = $cast(rhs_, rhs);
     type_check : assert (success) else
       `uvm_fatal("TYPE_CHECK", {"Failed to cast object ", rhs.get_name(), " to ubus_rsp_if"})
-    rhs_.get_data().to_queue(data);
+    rhs_.data().to_queue(data);
 
     product = new(name,
       data
@@ -441,8 +441,8 @@ class ubus_rsp extends immutables_pkg::immutable_object implements ubus_rsp_if;
     return product;
   endfunction : create_copy
 
-  virtual function immutables_pkg::scalar_tuple#(data_t) get_data();
+  virtual function immutables_pkg::scalar_tuple#(data_t) data();
     return this.data_tuple;
-  endfunction : get_data
+  endfunction : data
 
 endclass : ubus_rsp

@@ -51,8 +51,8 @@ class simple_response_seq extends uvm_sequence #(ubus_transfer);
       // to be stopped in the middle of a transfer.
       uvm_test_done.raise_objection(this);
       `uvm_do_with(req, 
-        { req.request_constraints.read_write == util_transfer.get_request().get_read_write(); 
-          req.request_constraints.size == util_transfer.get_request().get_size(); 
+        { req.request_constraints.read_write == util_transfer.get_request().read_write; 
+          req.request_constraints.size == util_transfer.get_request().size; 
           req.request_constraints.error_pos == 1000; } )
       uvm_test_done.drop_objection(this);
     end
@@ -90,22 +90,22 @@ class slave_memory_seq extends uvm_sequence #(ubus_transfer);
     tmp_req = rand_ubus_req::type_id::create("request");
     tmp_rsp = rand_ubus_rsp::type_id::create("response");
     if (req.get_request() != null) tmp_req.copy(req.get_request());
-    tmp_req.size       = util_transfer.get_request().get_size();
-    tmp_req.addr       = util_transfer.get_request().get_addr();             
-    tmp_req.read_write = util_transfer.get_request().get_read_write();             
-    tmp_req.error_pos  = 1000;             
-    tmp_req.transmit_delay = 0;
-    tmp_req.wait_state = new[util_transfer.get_request().get_size()];
-    tmp_rsp.data = new[util_transfer.get_request().get_size()];
-    for(int unsigned i = 0 ; i < util_transfer.get_request().get_size() ; i ++) begin
-      tmp_req.wait_state[i] = 2;
+    tmp_req.size$       = util_transfer.get_request().size;
+    tmp_req.addr$       = util_transfer.get_request().addr;             
+    tmp_req.read_write$ = util_transfer.get_request().read_write;             
+    tmp_req.error_pos$  = 1000;             
+    tmp_req.transmit_delay$ = 0;
+    tmp_req.wait_state$ = new[util_transfer.get_request().size];
+    tmp_rsp.data$ = new[util_transfer.get_request().size];
+    for(int unsigned i = 0 ; i < util_transfer.get_request().size ; i ++) begin
+      tmp_req.wait_state$[i] = 2;
       // For reads, populate req with the random "readback" data of the size
       // requested in util_transfer
       if( tmp_req.read_write == READ ) begin : READ_block
-        if (!m_mem.exists(util_transfer.get_request().get_addr() + i)) begin
-          m_mem[util_transfer.get_request().get_addr() + i] = $urandom;
+        if (!m_mem.exists(util_transfer.get_request().addr + i)) begin
+          m_mem[util_transfer.get_request().addr + i] = $urandom;
         end
-        tmp_rsp.data[i] = m_mem[util_transfer.get_request().get_addr() + i];
+        tmp_rsp.data$[i] = m_mem[util_transfer.get_request().addr + i];
       end
     end
     req.set_request(tmp_req);
@@ -114,9 +114,9 @@ class slave_memory_seq extends uvm_sequence #(ubus_transfer);
 
   function void post_do(uvm_sequence_item this_item);
     // For writes, update the m_mem associative array
-    if( util_transfer.get_request().get_read_write() == WRITE ) begin : WRITE_block
-      for(int unsigned i = 0 ; i < req.get_request().get_size() ; i ++) begin : for_block
-        m_mem[req.get_request().get_addr() + i] = req.get_request().get_data().get(i);
+    if( util_transfer.get_request().read_write == WRITE ) begin : WRITE_block
+      for(int unsigned i = 0 ; i < req.get_request().size ; i ++) begin : for_block
+        m_mem[req.get_request().addr + i] = req.get_request().data().get(i);
       end : for_block
     end
   endfunction

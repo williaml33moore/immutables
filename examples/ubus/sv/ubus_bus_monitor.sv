@@ -254,26 +254,26 @@ class ubus_bus_monitor extends uvm_monitor;
   // collect_address_phase
   task collect_address_phase();
     @(posedge vif.sig_clock);
-    bus_req.addr = vif.sig_addr;
+    bus_req.addr$ = vif.sig_addr;
     case (vif.sig_size)
-      2'b00 : bus_req.size = 1;
-      2'b01 : bus_req.size = 2;
-      2'b10 : bus_req.size = 4;
-      2'b11 : bus_req.size = 8;
+      2'b00 : bus_req.size$ = 1;
+      2'b01 : bus_req.size$ = 2;
+      2'b10 : bus_req.size$ = 4;
+      2'b11 : bus_req.size$ = 8;
     endcase
     case ({vif.sig_read,vif.sig_write})
       2'b00 : begin
-        bus_req.read_write = NOP;
+        bus_req.read_write$ = NOP;
         status.bus_state = NO_OP;
         state_port.write(status);
       end
       2'b10 : begin
-        bus_req.read_write = READ;
+        bus_req.read_write$ = READ;
         status.bus_state = ADDR_PH;
         state_port.write(status);
       end
       2'b01 : begin
-        bus_req.read_write = WRITE;
+        bus_req.read_write$ = WRITE;
         status.bus_state = ADDR_PH;
         state_port.write(status);
       end
@@ -294,23 +294,23 @@ class ubus_bus_monitor extends uvm_monitor;
       check_which_slave();
       case (bus_req.read_write)
         READ : begin
-          bus_req.data = new[0];
-          bus_rsp.data = new[bus_req.size];
+          bus_req.data$ = new[0];
+          bus_rsp.data$ = new[bus_req.size];
         end
         WRITE : begin
-          bus_req.data = new[bus_req.size];
-          bus_rsp.data = new[0];
+          bus_req.data$ = new[bus_req.size];
+          bus_rsp.data$ = new[0];
         end
-        default : `uvm_fatal("collect_data_phase", {"Unexpected read_write: ", bus_req.read_write.name()})
+        default : `uvm_fatal("collect_data_phase", {"Unexpected read_write: ", bus_req.read_write().name()})
       endcase
       for (i = 0; i < bus_req.size; i++) begin
         status.bus_state = DATA_PH;
         state_port.write(status);
         @(posedge vif.sig_clock iff vif.sig_wait === 0);
         case (bus_req.read_write)
-          READ : bus_rsp.data[i] = vif.sig_data;
-          WRITE : bus_req.data[i] = vif.sig_data;
-          default : `uvm_fatal("collect_data_phase", {"Unexpected read_write: ", bus_req.read_write.name()})
+          READ : bus_rsp.data$[i] = vif.sig_data;
+          WRITE : bus_req.data$[i] = vif.sig_data;
+          default : `uvm_fatal("collect_data_phase", {"Unexpected read_write: ", bus_req.read_write().name()})
         endcase
       end
       num_transactions++;
@@ -364,7 +364,7 @@ class ubus_bus_monitor extends uvm_monitor;
 
   // check_transfer_data_size
   function void check_transfer_data_size();
-    if (bus_req.size != (bus_req.read_write == READ) ? bus_rsp.data.size() : bus_req.data.size())
+    if (bus_req.size != (bus_req.read_write == READ) ? bus_rsp.data().size() : bus_req.data().size())
       `uvm_error(get_type_name(),
         "Transfer size field / data size mismatch.")
   endfunction : check_transfer_data_size
@@ -375,7 +375,7 @@ class ubus_bus_monitor extends uvm_monitor;
       -> cov_transaction;
       for (int unsigned i = 0; i < bus_req.size; i++) begin
         addr = bus_req.addr + i;
-        data = bus_rsp.data[i];
+        data = bus_rsp.data$[i];
         //wait_state = bus_req.wait_state[i];
         -> cov_transaction_beat;
       end

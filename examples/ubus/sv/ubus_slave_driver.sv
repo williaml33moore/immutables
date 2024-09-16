@@ -82,28 +82,28 @@ class ubus_slave_driver extends uvm_driver #(ubus_transfer);
     bus_rsp = trans.get_response();
     updated_req = rand_ubus_req::type_id::create("updated_req");
     updated_req.copy(bus_req);
-    if (bus_req.get_read_write() != NOP)
+    if (bus_req.read_write != NOP)
     begin
       vif.sig_error <= 1'b0;
-      if (bus_req.get_read_write() == WRITE) updated_req.data = new[bus_req.get_size()];
-      for (int i = 0; i < bus_req.get_size(); i++)
+      if (bus_req.read_write == WRITE) updated_req.data$ = new[bus_req.size];
+      for (int i = 0; i < bus_req.size; i++)
       begin
-        case (bus_req.get_read_write())
+        case (bus_req.read_write)
           READ : begin
             vif.rw <= 1'b1;
-            vif.sig_data_out <= bus_rsp.get_data().get(i);
+            vif.sig_data_out <= bus_rsp.data().get(i);
           end
           WRITE : begin
           end
         endcase
-        if (bus_req.get_wait_state().get(i) > 0) begin
+        if (bus_req.wait_state().get(i) > 0) begin
           vif.sig_wait <= 1'b1;
-          repeat (bus_req.get_wait_state().get(i))
+          repeat (bus_req.wait_state().get(i))
             @(posedge vif.sig_clock);
         end
         vif.sig_wait <= 1'b0;
         @(posedge vif.sig_clock);
-        if (bus_req.get_read_write() == WRITE) updated_req.data[i] = vif.sig_data;
+        if (bus_req.read_write == WRITE) updated_req.data$[i] = vif.sig_data;
       end
       vif.rw <= 1'b0;
       vif.sig_wait  <= 1'bz;

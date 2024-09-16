@@ -66,17 +66,17 @@ class ubus_example_scoreboard extends uvm_scoreboard;
     int unsigned data, exp;
     ubus_req_if trans_req = trans.get_request();
     ubus_rsp_if trans_rsp = trans.get_response();
-    for (int i = 0; i < trans_req.get_size(); i++) begin
+    for (int i = 0; i < trans_req.size; i++) begin
       // Check to see if entry in associative array for this address when read
       // If so, check that transfer data matches associative array data.
-      if (m_mem_expected.exists(trans_req.get_addr() + i)) begin
-        if (trans_req.get_read_write() == READ) begin
-          data = trans_rsp.get_data().get(i);
+      if (m_mem_expected.exists(trans_req.addr + i)) begin
+        if (trans_req.read_write == READ) begin
+          data = trans_rsp.data().get(i);
           `uvm_info(get_type_name(),
             $sformatf("%s to existing address...Checking address : %0h with data : %0h", 
-            trans_req.get_read_write().name(), trans_req.get_addr(), data), UVM_LOW)
-          assert(m_mem_expected[trans_req.get_addr() + i] == data) else begin
-            exp = m_mem_expected[trans_req.get_addr() + i];
+            trans_req.read_write().name(), trans_req.addr, data), UVM_LOW)
+          assert(m_mem_expected[trans_req.addr + i] == data) else begin
+            exp = m_mem_expected[trans_req.addr + i];
             `uvm_error(get_type_name(),
               $sformatf("Read data mismatch.  Expected : %0h.  Actual : %0h", 
               exp, data))
@@ -84,26 +84,26 @@ class ubus_example_scoreboard extends uvm_scoreboard;
           end
           num_init_reads++;
         end
-        if (trans_req.get_read_write() == WRITE) begin
-          data = trans_req.get_data().get(i);
+        if (trans_req.read_write == WRITE) begin
+          data = trans_req.data().get(i);
           `uvm_info(get_type_name(),
             $sformatf("%s to existing address...Updating address : %0h with data : %0h", 
-            trans_req.get_read_write().name(), trans_req.get_addr() + i, data), UVM_LOW)
-          m_mem_expected[trans_req.get_addr() + i] = data;
+            trans_req.read_write().name(), trans_req.addr + i, data), UVM_LOW)
+          m_mem_expected[trans_req.addr + i] = data;
           num_writes++;
         end
       end
       // Check to see if entry in associative array for this address
       // If not, update the location regardless if read or write.
       else begin
-        data = (trans_req.get_read_write() == READ) ? trans_rsp.get_data().get(i) : trans_req.get_data().get(i);
+        data = (trans_req.read_write == READ) ? trans_rsp.data().get(i) : trans_req.data().get(i);
         `uvm_info(get_type_name(),
           $sformatf("%s to empty address...Updating address : %0h with data : %0h", 
-          trans_req.get_read_write().name(), trans_req.get_addr() + i, data), UVM_LOW)
-        m_mem_expected[trans_req.get_addr() + i] = data;
-        if(trans_req.get_read_write() == READ)
+          trans_req.read_write().name(), trans_req.addr + i, data), UVM_LOW)
+        m_mem_expected[trans_req.addr + i] = data;
+        if(trans_req.read_write == READ)
           num_uninit_reads++;
-        else if (trans_req.get_read_write() == WRITE)
+        else if (trans_req.read_write == WRITE)
           num_writes++;
       end
     end
