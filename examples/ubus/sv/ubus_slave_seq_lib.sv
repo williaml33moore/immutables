@@ -101,7 +101,7 @@ class slave_memory_seq extends uvm_sequence #(ubus_transfer);
       tmp_req.wait_state$[i] = 2;
       // For reads, populate req with the random "readback" data of the size
       // requested in util_transfer
-      if( tmp_req.read_write == READ ) begin : READ_block
+      if( tmp_req.read_write$ == READ ) begin : READ_block
         if (!m_mem.exists(util_transfer.get_request().addr + i)) begin
           m_mem[util_transfer.get_request().addr + i] = $urandom;
         end
