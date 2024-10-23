@@ -19,10 +19,12 @@ virtual class box_config_immutable extends immutable_object implements box_confi
 
     static function box_config_immutable create_new (string name="", int length=0, int width=0, int height=0);
         `uvm_fatal("OVERRIDE", "Sub-class must override static method box_config_immutable::create_new() with custom implementation")
+        return null;
     endfunction : create_new
 
     static function box_config_immutable create_copy (string name="", uvm_object rhs);
         `uvm_fatal("OVERRIDE", "Sub-class must override static method box_config_immutable::create_copy() with custom implementation")
+        return null;
     endfunction : create_copy
 
     pure virtual function int get_length();
