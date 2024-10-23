@@ -8,31 +8,35 @@ typedef class box_config_immutable;
 typedef class box_config_factory_generic;
 typedef class box_config_copier;
 
-class box_config extends box_config_immutable;
-    // Association with its own factory type
-    typedef box_config this_type;
-    typedef box_config_factory_generic#(this_type) factory_type;
-    const static string type_name = "box_config";
+// Class extends abstract base class box_config_immutable, which extends
+// abstract base class immutable_object and implements box_config_interface
+// ========================================================================
 
-    // Local variables
-    // No rand variables
+class box_config extends box_config_immutable;
+
+    // * Typedef "factory_type" associates this class with its own factory class
+    typedef box_config_factory_generic#(box_config) factory_type;
+
+    // * Local variables
+    // * No const variables
+    // * No rand variables
     local int length;
     local int width;
     local int height;
- 
-    // No `uvm_object_utils()
-    // Field utils only
-    // Field flags UVM_NOPACK | UVM_NOCOPY | UVM_READONLY
+
+    // * No `uvm_object_utils()
+    // * Field utils only
+    // * Set field flags "UVM_NOPACK | UVM_NOCOPY | UVM_READONLY" on every variable
     `uvm_field_utils_begin(box_config)
-        `uvm_field_int(length, UVM_ALL_ON | UVM_DEC | UVM_NOPACK | UVM_NOCOPY | UVM_READONLY);
-        `uvm_field_int(width , UVM_ALL_ON | UVM_DEC | UVM_NOPACK | UVM_NOCOPY | UVM_READONLY);
-        `uvm_field_int(height, UVM_ALL_ON | UVM_DEC | UVM_NOPACK | UVM_NOCOPY | UVM_READONLY);
+    `uvm_field_int(length, UVM_ALL_ON | UVM_NOPACK | UVM_NOCOPY | UVM_READONLY);
+    `uvm_field_int(width , UVM_ALL_ON | UVM_NOPACK | UVM_NOCOPY | UVM_READONLY);
+    `uvm_field_int(height, UVM_ALL_ON | UVM_NOPACK | UVM_NOCOPY | UVM_READONLY);
     `uvm_field_utils_end
-   
-    // Local constructor `new()`
-    // First parameter is `string name`
-    // Remaining parameters initialize all values
-    // All parameters have default values
+
+    // * Local constructor "new()"
+    // * First parameter is "string name"
+    // * Remaining parameters initialize all variables
+    // * All parameters have default values
     local function new (string name="", int length=0, int width=0, int height=0);
         super.new(name);
         this.set_length(length);
@@ -40,62 +44,57 @@ class box_config extends box_config_immutable;
         this.set_height(height);
     endfunction
 
-    // Static factory method
-    static function box_config_immutable create_new (string name="", int length=0, int width=0, int height=0);
+    // * Static factory method
+    static function box_config_immutable create_new (
+            string name="", int length=0, int width=0, int height=0
+        );
         box_config product = new(name, length, width, height);
         return product;
     endfunction
 
-    // Static copy constructor
+    // * Static copy function
     static function box_config_immutable create_copy (string name="", uvm_object rhs);
+        // Non-trivial copy algorithm is provided by a parameterized helper class
         create_copy = box_config_copier#(box_config)::create_copy(name, rhs);
     endfunction
 
-    // Required implementation of uvm_object::get_type_name()
-    virtual function string get_type_name();
-        return type_name;
+    //* Required implementation of uvm_object::get_type_name()
+    virtual function string get_type_name ();
+        return "box_config";
     endfunction
 
-    // Required implementation of uvm_object::create()
-    virtual function uvm_object create(string name="");
-        this_type object = new(name);
+    // * Required implementation of uvm_object::create()
+    virtual function uvm_object create (string name="");
+        box_config object = new(name);
         return object;
     endfunction
 
-    // Recommended
-    virtual function string convert2string();
-        struct {int length; int width; int height;} values = '{
-            length: get_length(), width: get_width(), height: get_height()
-        };
-        return $sformatf("%p", values);
-    endfunction
-
-    // Local setters
-
-    local function void set_length(int length);
-        this.length = length;
-    endfunction
-
-    local function void set_width(int width);
-        this.width = width;
-    endfunction
-
-    local function void set_height(int height);
-        this.height = height;
-    endfunction
-
-    // Public getters
-
-    virtual function int get_length();
+    // Public getters required by box_config_interface
+    // -----------------------------------------------
+    virtual function int get_length ();
         return this.length;
     endfunction
 
-    virtual function int get_width();
+    virtual function int get_width ();
         return this.width;
     endfunction
 
-    virtual function int get_height();
+    virtual function int get_height ();
         return this.height;
+    endfunction
+
+    // Local setters
+    // -------------
+    local function void set_length (int length);
+        this.length = length;
+    endfunction
+
+    local function void set_width (int width);
+        this.width = width;
+    endfunction
+
+    local function void set_height (int height);
+        this.height = height;
     endfunction
 endclass
 
