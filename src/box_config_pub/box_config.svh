@@ -58,7 +58,7 @@ class box_config extends box_config_immutable;
         create_copy = box_config_copier#(box_config)::create_copy(name, rhs);
     endfunction
 
-    //* Required implementation of uvm_object::get_type_name()
+    // * Required implementation of uvm_object::get_type_name()
     virtual function string get_type_name ();
         return "box_config";
     endfunction
