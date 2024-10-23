@@ -233,6 +233,77 @@ class box_config_test extends uvm_test;
             box_cfg.print();
         end
     end
+    begin : paper_simple_create_box_cfg
+        string doc = "Paper example: Use factory function to create a new box_cfg.";
+        int length = 24;
+        int width = 18;
+        int height = 12;
+        box_config_immutable box_cfg = box_config::create_new("box_cfg", length, width, height);
+
+        $info(doc);
+        assert (box_cfg);
+        assert (box_cfg.get_name() == "box_cfg");
+        assert (box_cfg.get_length() == 24);
+        assert (box_cfg.get_width() == 18);
+        assert (box_cfg.get_height() == 12);
+    end
+    begin : paper_reset_type_override
+        string doc = "Reset type override back to flagship box_cfg before subsequent secondary factory tests.";
+        $info(doc);
+        uvm_factory::get().set_type_override_by_type(box_config_factory::get_type(), box_config_factory::get_type());
+    end
+    begin : paper_create_box_cfg_with_retained_secondary_factory
+        string doc = "Paper example: Use secondary factory to create a new box_cfg.";
+        int length = 240;
+        int width = 180;
+        int height = 120;
+
+        box_config_factory factory = box_config_factory::type_id::create("factory");
+        box_config_immutable box_cfg = factory.create_new("box_cfg", length, width, height);
+        
+        $info(doc);
+        assert (box_cfg);
+        assert (box_cfg.get_name() == "box_cfg");
+        assert (box_cfg.get_length() == 240);
+        assert (box_cfg.get_width() == 180);
+        assert (box_cfg.get_height() == 120);
+    end
+    begin : paper_create_box_cfg_with_anonymous_secondary_factory
+        string doc = "Paper example: Use anonymous secondary factory to create a new box_cfg.";
+        int length = 2400;
+        int width = 1800;
+        int height = 1200;
+        box_config_immutable box_cfg;
+
+        box_cfg = box_config_factory::type_id::create("anonymous_factory").create_new("box_cfg", length,
+            width, height);
+        
+        $info(doc);
+        assert (box_cfg);
+        assert (box_cfg.get_name() == "box_cfg");
+        assert (box_cfg.get_length() == 2400);
+        assert (box_cfg.get_width() == 1800);
+        assert (box_cfg.get_height() == 1200);
+    end
+    begin : paper_type_override_creates_cube_cfg
+        string doc = "Paper example: Use type override to create a new cube cfg.";
+        int length = 24000;
+        int width = 18000;
+        int height = 12000;
+        box_config_immutable box_cfg;
+
+        uvm_factory::get().set_type_override_by_type(box_config_factory::get_type(),
+            box_config_factory_generic#(box_config_variant_cube)::get_type());
+        box_cfg = box_config_factory::type_id::create("anonymous_factory").create_new("box_cfg", length,
+            width, height); // Same operation now creates a box_config_variant_cube
+        
+        $info(doc);
+        assert (box_cfg);
+        assert (box_cfg.get_name() == "box_cfg");
+        assert (box_cfg.get_length() == 24000);
+        assert (box_cfg.get_width() == 24000);
+        assert (box_cfg.get_height() == 24000);
+    end
     endtask
 
 endclass : box_config_test
