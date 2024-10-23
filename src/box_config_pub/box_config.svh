@@ -6,6 +6,7 @@ import uvm_pkg::*;
 
 typedef class box_config_immutable;
 typedef class box_config_factory_generic;
+typedef class box_config_copier;
 
 class box_config extends box_config_immutable;
     // Association with its own factory type

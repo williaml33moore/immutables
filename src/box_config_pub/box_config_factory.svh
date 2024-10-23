@@ -19,7 +19,7 @@ class box_config_factory extends uvm_object;
     endfunction : create_new
 
     virtual function box_config_immutable create_copy (string name="", uvm_object rhs);
-        create_copy = box_config_copier#(box_config)::create_copy(name, rhs);
+        create_copy = box_config::create_copy(name, rhs);
     endfunction : create_copy
 endclass : box_config_factory
 

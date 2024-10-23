@@ -20,7 +20,7 @@ class box_config_factory_generic#(type PT=box_config) extends box_config_factory
     endfunction : create_new
 
     virtual function box_config_immutable create_copy (string name="", uvm_object rhs);
-        create_copy = box_config_copier#(PT)::create_copy(name, rhs);
+        create_copy = PT::create_copy(name, rhs);
     endfunction : create_copy
 endclass : box_config_factory_generic
 
