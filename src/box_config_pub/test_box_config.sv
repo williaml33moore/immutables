@@ -304,6 +304,21 @@ class box_config_test extends uvm_test;
         assert (box_cfg.get_width() == 24000);
         assert (box_cfg.get_height() == 24000);
     end
+    begin : paper_copy_random_mutable_to_immutable
+        string doc = "Paper example: Randomize a mutable box_cfg and copy it to an immutable.";
+        box_config_immutable box_cfg;
+
+        box_config_mutable temp = box_config_mutable::type_id::create("temp");
+        void'(temp.randomize());
+        box_cfg = box_config::create_copy("box_cfg", temp);
+        
+        $info(doc);
+        assert (box_cfg);
+        assert (box_cfg.get_name() == "box_cfg");
+        assert (box_cfg.get_length() == temp.get_length());
+        assert (box_cfg.get_width() == temp.get_width());
+        assert (box_cfg.get_height() == temp.get_height());
+    end
     endtask
 
 endclass : box_config_test
