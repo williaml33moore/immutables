@@ -1,2 +1,2 @@
 # immutables
-Explorations of immutable objects in SystemVerilog and UVM
+Explorations of immutable objects in SystemVerilog and UVM.
