@@ -133,6 +133,7 @@ endclass : test_r8_w8_r4_w4
 // 2 Master, 4 Slave test
 class test_2m_4s extends ubus_example_base_test;
 
+  ubus_env_config_interface cfg;
   `uvm_component_utils(test_2m_4s)
 
   function new(string name = "test_2m_4s", uvm_component parent=null);
@@ -145,10 +146,9 @@ class test_2m_4s extends ubus_example_base_test;
   begin
     // Overides to the ubus_example_tb build_phase()
     // Set the topology to 2 masters, 4 slaves
-    uvm_config_db#(int)::set(this,"ubus_example_tb0.ubus0", 
-			       "num_masters", 2);
-    uvm_config_db#(int)::set(this,"ubus_example_tb0.ubus0", 
-			       "num_slaves", 4);
+    cfg = ubus_env_config_factory::type_id::create("factory").create_new(.name ("cfg"), .num_masters (2), .num_slaves (4));
+    uvm_config_db#(ubus_env_config_interface)::set(this,"ubus_example_tb0.ubus0", 
+			       "cfg", cfg);
      
    // Control the number of RMW loops
     uvm_config_db#(int)::set(this,"ubus_example_tb0.ubus0.masters[0].sequencer.loop_read_modify_write_seq", "itr", 6);

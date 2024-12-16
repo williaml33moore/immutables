@@ -30,10 +30,8 @@ class ubus_env extends uvm_env;
   // Virtual Interface variable
   protected virtual interface ubus_if vif;
 
-  // Control properties
-  protected bit has_bus_monitor = 1;
-  protected int num_masters = 0;
-  protected int num_slaves = 0;
+  // Config object
+  protected ubus_env_config_interface cfg;
 
   // The following two bits are used to control whether checks and coverage are
   // done both in the bus monitor class and the interface.
@@ -47,9 +45,6 @@ class ubus_env extends uvm_env;
 
   // Provide implementations of virtual methods such as get_type_name and create
   `uvm_component_utils_begin(ubus_env)
-    `uvm_field_int(has_bus_monitor, UVM_DEFAULT)
-    `uvm_field_int(num_masters, UVM_DEFAULT)
-    `uvm_field_int(num_slaves, UVM_DEFAULT)
     `uvm_field_int(intf_checks_enable, UVM_DEFAULT)
     `uvm_field_int(intf_coverage_enable, UVM_DEFAULT)
   `uvm_component_utils_end
@@ -66,15 +61,15 @@ class ubus_env extends uvm_env;
     super.build_phase(phase);
      if(!uvm_config_db#(virtual ubus_if)::get(this, "", "vif", vif))
        `uvm_fatal("NOVIF",{"virtual interface must be set for: ",get_full_name(),".vif"});
+    
+    void'(uvm_config_db#(ubus_env_config_interface)::get(this, "", "cfg", cfg));
      
-    if(has_bus_monitor == 1) begin
+    if(cfg.get_has_bus_monitor() == 1) begin
       bus_monitor = ubus_bus_monitor::type_id::create("bus_monitor", this);
     end
-    
-    void'(uvm_config_db#(int)::get(this, "", "num_masters", num_masters));
    
-    masters = new[num_masters];
-    for(int i = 0; i < num_masters; i++) begin
+    masters = new[cfg.get_num_masters()];
+    for(int i = 0; i < cfg.get_num_masters(); i++) begin
       $sformat(inst_name, "masters[%0d]", i);
       masters[i] = ubus_master_agent::type_id::create(inst_name, this);
       void'(uvm_config_db#(int)::set(this,{inst_name,".monitor"}, 
@@ -82,11 +77,9 @@ class ubus_env extends uvm_env;
       void'(uvm_config_db#(int)::set(this,{inst_name,".driver"}, 
 				 "master_id", i));
     end
-
-    void'(uvm_config_db#(int)::get(this, "", "num_slaves", num_slaves));
     
-    slaves = new[num_slaves];
-    for(int i = 0; i < num_slaves; i++) begin
+    slaves = new[cfg.get_num_slaves()];
+    for(int i = 0; i < cfg.get_num_slaves(); i++) begin
       $sformat(inst_name, "slaves[%0d]", i);
       slaves[i] = ubus_slave_agent::type_id::create(inst_name, this);
     end

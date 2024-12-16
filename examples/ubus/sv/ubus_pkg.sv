@@ -23,11 +23,17 @@
 package ubus_pkg;
 
    import uvm_pkg::*;
+   import immutables_pkg::*;
 
 `include "uvm_macros.svh"
 
    typedef uvm_config_db#(virtual ubus_if) ubus_vif_config;
    typedef virtual ubus_if ubus_vif;
+   typedef class ubus_env_config_immutable;
+   typedef class ubus_env_config_copier;
+   typedef class ubus_env_config;
+   typedef class ubus_env_config_factory;
+   typedef class ubus_env_config_factory_generic;
 
 `include "ubus_transfer.sv"
 
@@ -42,6 +48,13 @@ package ubus_pkg;
 `include "ubus_slave_agent.sv"
 
 `include "ubus_bus_monitor.sv"
+
+`include "ubus_env_config_interface.sv"
+`include "ubus_env_config_immutable.sv"
+`include "ubus_env_config_copier.svh"
+`include "ubus_env_config.sv"
+`include "ubus_env_config_factory.sv"
+`include "ubus_env_config_factory_generic.sv"
 
 `include "ubus_env.sv"
 
